@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>可愛動物泡泡救援大冒險</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'PingFang TC', 'Microsoft JhengHei', -apple-system, sans-serif;
+    }
+    body {
+      margin: 0;
+      padding: 15px;
+      background-color: #E2E8F0; /* 經典莫蘭迪灰藍底色 */
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #334155;
+    }
+    .game-card {
+      width: 100%;
+      max-width: 520px;
+      background: #F8FAFC;
+      border-radius: 28px;
+      padding: 24px;
+      box-shadow: 0 12px 30px rgba(100, 116, 139, 0.15);
+      border: 2px solid #CBD5E1;
+      text-align: center;
+      position: relative;
+    }
+    
+    /* Header Bar - 大字體加強 */
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #EDF2F7;
+      padding: 12px 18px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+      font-size: 1.25rem;
+      font-weight: bold;
+    }
+    .timer { color: #C57B57; font-weight: bold; font-size: 1.45rem; }
+    .stage-tag {
+      background: #94A3B8;
+      color: white;
+      padding: 6px 16px;
+      border-radius: 16px;
+      font-size: 1.1rem;
+    }
+    .stage-tag.boss { background: #E2B4BD; color: #5B2C36; }
+
+    /* Bubble Stage */
+    .bubble-stage {
+      background: #FFFFFF;
+      border-radius: 24px;
+      border: 3px dashed #CBD5E1;
+      height: 200px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      position: relative;
+    }
+    .animal-bubble {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #FFFFFF, #B8C5D6);
+      box-shadow: 0 10px 25px rgba(148, 163, 184, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 4.5rem; /* 動物圖示大幅放大 */
+      animation: float 3s ease-in-out infinite;
+    }
+    .rare-bubble {
+      width: 125px;
+      height: 125px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #FFFFFF, #E2B4BD);
+      box-shadow: 0 10px 25px rgba(226, 180, 189, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 4.8rem;
+      animation: float 2.5s ease-in-out infinite;
+    }
+
+    /* 上方密碼數字加重加高 */
+    .num-tags-container {
+      display: flex;
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .num-badge {
+      background: #B8C5D6;
+      color: #1E293B;
+      padding: 8px 18px;
+      border-radius: 14px;
+      font-weight: bold;
+      font-size: 1.6rem; /* 數字加大幅 */
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+    .num-badge.done {
+      background: #A3B18A;
+      color: white;
+      text-decoration: line-through;
+      opacity: 0.4;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
+
+    /* 題目文字大幅放大 */
+    .question-title {
+      font-size: 1.85rem;
+      font-weight: bold;
+      color: #1E293B;
+      margin-bottom: 20px;
+    }
+
+    /* Buttons Layout - 大選項與高大字體 */
+    .options-container { display: grid; gap: 14px; width: 100%; }
+    .grid-3 { grid-template-columns: repeat(3, 1fr); }
+    .grid-1 { grid-template-columns: 1fr; }
+
+    .btn-bubble {
+      background: #94A3B8;
+      color: white;
+      border: none;
+      padding: 16px 10px;
+      font-size: 1.7rem; /* 按鈕內的數字與算式字體放大 */
+      font-weight: bold;
+      border-radius: 20px;
+      cursor: pointer;
+      box-shadow: 0 6px 12px rgba(148, 163, 184, 0.25);
+      transition: all 0.2s;
+    }
+    .btn-bubble:hover { background: #78889E; transform: translateY(-2px); }
+    .btn-bubble:disabled { background: #CBD5E1; opacity: 0.35; cursor: not-allowed; transform: none; }
+
+    /* Modal / Cert - 證書放大設計 */
+    .modal-overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(248, 250, 252, 0.98);
+      border-radius: 28px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      z-index: 10;
+    }
+    .cert-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
+    .medal-icon { font-size: 5.5rem; margin-bottom: 10px; }
+    .cert-title {
+      font-size: 1.85rem;
+      font-weight: bold;
+      color: #1E293B;
+      margin-bottom: 20px;
+    }
+    .animals-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      font-size: 2.3rem; /* 收集到動物圖示放大 */
+      padding: 16px;
+      background: #FFFFFF;
+      border: 2px solid #E2E8F0;
+      border-radius: 20px;
+      width: 100%;
+      max-height: 140px;
+      overflow-y: auto;
+      margin-bottom: 24px;
+    }
+    .btn-restart {
+      background: #84A98C;
+      color: white;
+      border: none;
+      padding: 16px 40px;
+      font-size: 1.4rem;
+      font-weight: bold;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 6px 16px rgba(132, 169, 140, 0.35);
+    }
+    .btn-restart:hover { background: #6B9080; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<div class="game-card">
+  <!-- Header Bar -->
+  <div class="header-bar">
+    <div>時間 <span id="timer" class="timer">05:00</span></div>
+    <div id="stage-tag" class="stage-tag">一般救援 1/7</div>
+    <div>救援數 <span id="total-count" style="color:#5B7065; font-size:1.45rem;">0</span></div>
+  </div>
+
+  <!-- Stage Area -->
+  <div class="bubble-stage">
+    <div id="normal-box">
+      <div class="animal-bubble" id="normal-animal">🐶</div>
+    </div>
+    
+    <div id="rare-box" class="hidden" style="display:flex; flex-direction:column; align-items:center;">
+      <div class="rare-bubble" id="rare-animal">🦄</div>
+      <div class="num-tags-container" id="num-tags-container"></div>
+    </div>
+  </div>
+
+  <!-- Question & Options -->
+  <div id="question" class="question-title">載入中...</div>
+  <div id="options-box" class="options-container grid-3"></div>
+
+  <!-- Cert Modal -->
+  <div id="cert-modal" class="modal-overlay hidden">
+    <div class="cert-box">
+      <div id="cert-medal" class="medal-icon">🥇</div>
+      <div id="cert-line" class="cert-title">動物救援小英雄 金牌</div>
+      
+      <div id="cert-animals" class="animals-grid"></div>
+
+      <button class="btn-restart" onclick="startGame()">再次挑戰 🔄</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const normalList = ['🐶','🐱','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮'];
+  const rareList = ['🦄','🐲','🦅','🐉','🐺'];
+
+  let timeLeft = 300;
+  let timer = null;
+  let rescuedCount = 0;
+  let rescuedLog = [];
+  
+  let currentStep = 0; // 0-6 normal, 7 boss
+  let isBoss = false;
+  
+  let bossTargets = [];
+  let bossCleared = [];
+  let bossQuestions = [];
+
+  const timerEl = document.getElementById('timer');
+  const stageTagEl = document.getElementById('stage-tag');
+  const totalCountEl = document.getElementById('total-count');
+  const normalBox = document.getElementById('normal-box');
+  const rareBox = document.getElementById('rare-box');
+  const normalAnimalEl = document.getElementById('normal-animal');
+  const rareAnimalEl = document.getElementById('rare-animal');
+  const numTagsContainer = document.getElementById('num-tags-container');
+  const questionEl = document.getElementById('question');
+  const optionsBox = document.getElementById('options-box');
+  const certModal = document.getElementById('cert-modal');
+
+  function startGame() {
+    timeLeft = 300;
+    rescuedCount = 0;
+    rescuedLog = [];
+    currentStep = 0;
+    isBoss = false;
+    
+    certModal.classList.add('hidden');
+    updateHeader();
+    
+    if(timer) clearInterval(timer);
+    timer = setInterval(updateTimer, 1000);
+    
+    nextQuestion();
+  }
+
+  function updateTimer() {
+    timeLeft--;
+    let m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+    let s = (timeLeft % 60).toString().padStart(2, '0');
+    timerEl.innerText = `${m}:${s}`;
+
+    if (timeLeft <= 0) {
+      clearInterval(timer);
+      endGame();
+    }
+  }
+
+  function updateHeader() {
+    totalCountEl.innerText = rescuedCount;
+    if (!isBoss) {
+      stageTagEl.innerText = `一般救援 ${currentStep + 1}/7`;
+      stageTagEl.className = "stage-tag";
+    } else {
+      stageTagEl.innerText = `魔王關卡`;
+      stageTagEl.className = "stage-tag boss";
+    }
+  }
+
+  function getRandom(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function makeMath(target = null) {
+    let n1, n2, op, ans;
+    const ops = ['+', '-'];
+    if (target !== null) {
+      ans = target;
+      op = ops[getRandom(0, 1)];
+      if (op === '+') {
+        n1 = getRandom(1, ans - 1 || 1);
+        n2 = ans - n1;
+      } else {
+        n2 = getRandom(5, 20);
+        n1 = ans + n2;
+      }
+    } else {
+      op = ops[getRandom(0, 1)];
+      if (op === '+') {
+        n1 = getRandom(10, 40);
+        n2 = getRandom(5, 30);
+        ans = n1 + n2;
+      } else {
+        n1 = getRandom(20, 60);
+        n2 = getRandom(5, n1 - 1);
+        ans = n1 - n2;
+      }
+    }
+    return { expr: `${n1} ${op} ${n2}`, ans: ans };
+  }
+
+  function nextQuestion() {
+    updateHeader();
+    optionsBox.innerHTML = '';
+
+    if (currentStep < 7) {
+      isBoss = false;
+      normalBox.classList.remove('hidden');
+      rareBox.classList.add('hidden');
+      
+      const animal = normalList[getRandom(0, normalList.length - 1)];
+      normalAnimalEl.innerText = animal;
+      normalAnimalEl.dataset.animal = animal;
+      
+      const prob = makeMath();
+      questionEl.innerText = `${prob.expr} = ?`;
+      
+      let choices = [prob.ans];
+      while(choices.length < 3) {
+        let wrong = prob.ans + getRandom(-6, 6);
+        if (wrong > 0 && !choices.includes(wrong)) choices.push(wrong);
+      }
+      choices.sort(() => Math.random() - 0.5);
+
+      optionsBox.className = "options-container grid-3";
+      choices.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'btn-bubble';
+        btn.innerText = opt;
+        btn.onclick = () => {
+          if (opt === prob.ans) {
+            rescuedCount++;
+            rescuedLog.push(normalAnimalEl.dataset.animal);
+            currentStep++;
+            nextQuestion();
+          } else {
+            alert("算錯囉，再試一次！");
+          }
+        };
+        optionsBox.appendChild(btn);
+      });
+
+    } else {
+      setupBoss();
+    }
+  }
+
+  function setupBoss() {
+    isBoss = true;
+    updateHeader();
+    normalBox.classList.add('hidden');
+    rareBox.classList.remove('hidden');
+
+    const rare = rareList[getRandom(0, rareList.length - 1)];
+    rareAnimalEl.innerText = rare;
+    rareAnimalEl.dataset.animal = rare;
+
+    bossTargets = [];
+    while(bossTargets.length < 3) {
+      let t = getRandom(15, 60);
+      if(!bossTargets.includes(t)) bossTargets.push(t);
+    }
+    bossCleared = [false, false, false];
+
+    renderBossTags();
+
+    let questions = [];
+    bossTargets.forEach(t => questions.push(makeMath(t)));
+    while(questions.length < 5) {
+      let dummy = makeMath();
+      if(!bossTargets.includes(dummy.ans)) questions.push(dummy);
+    }
+    questions.sort(() => Math.random() - 0.5);
+    bossQuestions = questions;
+
+    questionEl.innerText = "找出對應上面數字的算式！";
+    optionsBox.className = "options-container grid-1";
+
+    renderBossOptions();
+  }
+
+  function renderBossTags() {
+    numTagsContainer.innerHTML = '';
+    bossTargets.forEach((num, idx) => {
+      const tag = document.createElement('div');
+      tag.className = `num-badge ${bossCleared[idx] ? 'done' : ''}`;
+      tag.innerText = num;
+      numTagsContainer.appendChild(tag);
+    });
+  }
+
+  function renderBossOptions() {
+    optionsBox.innerHTML = '';
+    bossQuestions.forEach((q, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'btn-bubble';
+      btn.innerText = `${q.expr} = ?`;
+      if(q.solved) btn.disabled = true;
+      
+      btn.onclick = () => {
+        const targetIdx = bossTargets.indexOf(q.ans);
+        if (targetIdx !== -1 && !bossCleared[targetIdx]) {
+          bossCleared[targetIdx] = true;
+          q.solved = true;
+          renderBossTags();
+          renderBossOptions();
+
+          if (bossCleared.every(c => c === true)) {
+            setTimeout(() => {
+              rescuedCount++;
+              rescuedLog.push(rareAnimalEl.dataset.animal);
+              currentStep = 0;
+              nextQuestion();
+            }, 150);
+          }
+        } else {
+          alert("答案沒有在上面的數字中喔！");
+        }
+      };
+      optionsBox.appendChild(btn);
+    });
+  }
+
+  function endGame() {
+    let medal = "🥇";
+    let title = "動物救援小英雄 金牌";
+    
+    if (rescuedCount >= 30) {
+      medal = "🥇"; title = "動物救援小英雄 金牌";
+    } else if (rescuedCount >= 20) {
+      medal = "🥈"; title = "動物救援小英雄 銀牌";
+    } else if (rescuedCount >= 10) {
+      medal = "🥉"; title = "動物救援小英雄 銅牌";
+    } else {
+      medal = "🎖️"; title = "動物救援小英雄 實習救援官";
+    }
+    
+    document.getElementById('cert-medal').innerText = medal;
+    document.getElementById('cert-line').innerText = title;
+    
+    const display = document.getElementById('cert-animals');
+    display.innerHTML = '';
+    rescuedLog.forEach(a => {
+      const span = document.createElement('span');
+      span.innerText = a;
+      display.appendChild(span);
+    });
+
+    certModal.classList.remove('hidden');
+  }
+
+  startGame();
+</script>
+</body>
+</html>
