@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>可愛動物泡泡救援隊 - 數學關卡版</title>
+  <style>
+    * { box-sizing: border-box; font-family: 'Comic Sans MS', 'PingFang TC', 'Microsoft JhengHei', sans-serif; }
+    body {
+      margin: 0; padding: 0;
+      background: linear-gradient(180deg, #a1c4fd 0%, #c2e9fb 100%);
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    #game-container {
+      width: 95%; max-width: 650px; background: white;
+      border-radius: 24px; padding: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      text-align: center; position: relative; overflow: hidden;
+    }
+    .header {
+      display: flex; justify-content: space-between; align-items: center;
+      background: #f0f7ff; padding: 12px 20px; border-radius: 16px; margin-bottom: 15px;
+      font-size: 1.1rem; font-weight: bold; color: #333;
+    }
+    .timer { color: #e74c3c; font-size: 1.3rem; }
+    .badge { background: #ffecb3; color: #b78103; padding: 4px 12px; border-radius: 20px; font-size: 0.9rem; }
+    
+    /* Stage Area */
+    .stage-area {
+      min-height: 220px; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; position: relative;
+      background: #fdfbf7; border-radius: 20px; border: 3px dashed #ffd166; padding: 15px; margin-bottom: 20px;
+    }
+    
+    /* Normal Animal Bubble */
+    .bubble {
+      width: 100px; height: 100px; border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9), rgba(147,197,253,0.6));
+      box-shadow: 0 8px 15px rgba(0,0,0,0.1), inset 0 0 15px rgba(255,255,255,0.8);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 3.5rem; animation: float 3s ease-in-out infinite; margin-bottom: 10px;
+    }
+    
+    /* Boss Rare Animal Bubble */
+    .rare-bubble-container {
+      position: relative; display: flex; flex-direction: column; align-items: center;
+    }
+    .rare-bubble {
+      width: 160px; height: 160px; border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.95), rgba(245,158,11,0.5));
+      border: 4px solid #fbbf24;
+      box-shadow: 0 0 25px rgba(245,158,11,0.5), inset 0 0 20px rgba(255,255,255,0.9);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 5rem; animation: float 2.5s ease-in-out infinite;
+    }
+    .target-numbers {
+      display: flex; gap: 8px; margin-top: 10px;
+    }
+    .num-tag {
+      background: #ef4444; color: white; padding: 4px 12px; border-radius: 12px;
+      font-weight: bold; font-size: 1.1rem; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    .num-tag.cleared { background: #10b981; opacity: 0.5; text-decoration: line-through; }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .question { font-size: 1.5rem; font-weight: bold; color: #2d3748; margin-bottom: 15px; }
+    
+    /* Options Grid */
+    .options-grid { display: grid; gap: 10px; width: 100%; }
+    .grid-2 { grid-template-columns: 1fr 1fr; }
+    .grid-1 { grid-template-columns: 1fr; }
+    
+    .btn-opt {
+      background: #4158d0; background-image: linear-gradient(43deg, #4158d0 0%, #c850c0 100%);
+      color: white; border: none; padding: 12px; font-size: 1.2rem; font-weight: bold;
+      border-radius: 14px; cursor: pointer; transition: all 0.2s;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+    .btn-opt:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.2); }
+    .btn-opt:active { transform: translateY(0); }
+    .btn-opt:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    /* Modal / Certificate */
+    .modal {
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255,255,255,0.98); display: flex; flex-direction: column;
+      align-items: center; justify-content: center; padding: 20px; z-index: 10;
+    }
+    .cert-card {
+      border: 8px double #fbbf24; border-radius: 20px; padding: 20px; background: #fffdf5;
+      width: 100%; max-width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+    .cert-title { font-size: 1.6rem; color: #b45309; font-weight: bold; margin-bottom: 10px; }
+    .badge-title { font-size: 1.4rem; color: #d97706; font-weight: bold; margin: 10px 0; }
+    .list-box {
+      background: white; border: 1px solid #fde68a; border-radius: 12px;
+      padding: 10px; text-align: left; margin: 10px 0; font-size: 0.95rem; line-height: 1.6;
+      max-height: 120px; overflow-y: auto;
+    }
+    .restart-btn {
+      background: #10b981; color: white; border: none; padding: 12px 30px;
+      font-size: 1.2rem; font-weight: bold; border-radius: 50px; cursor: pointer; margin-top: 15px;
+    }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<div id="game-container">
+  <!-- Header Info -->
+  <div class="header">
+    <div>倒數時間: <span id="timer" class="timer">05:00</span></div>
+    <div id="stage-badge" class="badge">關卡 1-1 (一般救援)</div>
+    <div>總救援: <span id="total-count" style="color:#2563eb; font-size:1.3rem;">0</span> 隻</div>
+  </div>
+
+  <!-- Stage Area -->
+  <div class="stage-area">
+    <div id="normal-stage">
+      <div class="bubble" id="normal-animal">🐶</div>
+    </div>
+    
+    <div id="rare-stage" class="hidden">
+      <div class="rare-bubble-container">
+        <div class="rare-bubble" id="rare-animal">🦄</div>
+        <div style="font-weight:bold; color:#d97706; margin-top:5px;">⚠️ 巨大鎖定泡泡！破解3個密碼鎖：</div>
+        <div class="target-numbers" id="target-numbers">
+          <!-- Targets will render here -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Question & Options -->
+  <div id="question" class="question">載入中...</div>
+  <div id="options" class="options-grid grid-2">
+    <!-- Option buttons -->
+  </div>
+
+  <!-- Certificate Modal -->
+  <div id="cert-modal" class="modal hidden">
+    <div class="cert-card">
+      <div class="cert-title">🏆 救援小英雄榮譽證書 🏆</div>
+      <p>恭喜完成 5 分鐘限時救援任務！</p>
+      
+      <div id="cert-badge-text" class="badge-title">動物救援小英雄 金牌</div>
+      
+      <div style="text-align:left; font-weight:bold; margin-top:10px;">拯救統計：</div>
+      <div class="list-box">
+        <div>🐾 普通動物：<span id="cert-normal-count">0</span> 隻</div>
+        <div>🌟 稀有動物：<span id="cert-rare-list">無</span></div>
+        <hr style="border:0; border-top:1px dashed #fde68a; margin:5px 0;">
+        <div>總計救援：<strong id="cert-total-count" style="color:#d97706;">0</strong> 隻</div>
+      </div>
+
+      <button class="restart-btn" onclick="startGame()">再次挑戰 🔄</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Animal Lists
+  const normalAnimals = ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵'];
+  const rareAnimals = ['🦄','🐉','鳳凰(🦅)','👑🦁','✨🐬','🌈🦒','🎆🦅'];
+
+  // Game States
+  let timeLeft = 300; // 5 mins in seconds
+  let timerInterval = null;
+  let totalRescued = 0;
+  let normalRescuedCount = 0;
+  let rareRescuedList = [];
+  
+  let currentStageStep = 0; // 0-6: Normal, 7: Boss Rare
+  let isRareStage = false;
+  
+  // Rare Stage States
+  let rareTargets = [];
+  let rareCleared = [];
+  let currentQuestions = [];
+
+  // DOM Elements
+  const timerEl = document.getElementById('timer');
+  const stageBadgeEl = document.getElementById('stage-badge');
+  const totalCountEl = document.getElementById('total-count');
+  const normalStageEl = document.getElementById('normal-stage');
+  const rareStageEl = document.getElementById('rare-stage');
+  const normalAnimalEl = document.getElementById('normal-animal');
+  const rareAnimalEl = document.getElementById('rare-animal');
+  const targetNumbersEl = document.getElementById('target-numbers');
+  const questionEl = document.getElementById('question');
+  const optionsEl = document.getElementById('options');
+  const certModal = document.getElementById('cert-modal');
+
+  function startGame() {
+    timeLeft = 300;
+    totalRescued = 0;
+    normalRescuedCount = 0;
+    rareRescuedList = [];
+    currentStageStep = 0;
+    isRareStage = false;
+    
+    certModal.classList.add('hidden');
+    updateHeader();
+    
+    if(timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(updateTimer, 1000);
+    
+    nextQuestion();
+  }
+
+  function updateTimer() {
+    timeLeft--;
+    let m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+    let s = (timeLeft % 60).toString().padStart(2, '0');
+    timerEl.innerText = `${m}:${s}`;
+
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      endGame();
+    }
+  }
+
+  function updateHeader() {
+    totalCountEl.innerText = totalRescued;
+    if (!isRareStage) {
+      stageBadgeEl.innerText = `一般關卡 (${currentStageStep + 1}/7)`;
+      stageBadgeEl.style.background = "#ffecb3";
+      stageBadgeEl.style.color = "#b78103";
+    } else {
+      stageBadgeEl.innerText = `⚠️ 稀有 BOSS 關卡！`;
+      stageBadgeEl.style.background = "#fca5a5";
+      stageBadgeEl.style.color = "#991b1b";
+    }
+  }
+
+  function getRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  // Generate Math Formula (Suitable for Grade 2: Addition/Subtraction within 100, simple multiplication)
+  function generateMathProblem(targetAns = null) {
+    let num1, num2, op, ans;
+    const ops = ['+', '-'];
+    
+    if (targetAns !== null) {
+      // Force generating a problem that equals targetAns
+      ans = targetAns;
+      op = ops[getRandomInt(0, 1)];
+      if (op === '+') {
+        num1 = getRandomInt(1, ans - 1 || 1);
+        num2 = ans - num1;
+      } else {
+        num2 = getRandomInt(5, 30);
+        num1 = ans + num2;
+      }
+    } else {
+      // Random Problem
+      op = ops[getRandomInt(0, 1)];
+      if (op === '+') {
+        num1 = getRandomInt(10, 50);
+        num2 = getRandomInt(5, 40);
+        ans = num1 + num2;
+      } else {
+        num1 = getRandomInt(20, 80);
+        num2 = getRandomInt(5, num1 - 1);
+        ans = num1 - num2;
+      }
+    }
+    return { expr: `${num1} ${op} ${num2}`, ans: ans };
+  }
+
+  function nextQuestion() {
+    updateHeader();
+    optionsEl.innerHTML = '';
+
+    if (currentStageStep < 7) {
+      // Normal Stage Question
+      isRareStage = false;
+      normalStageEl.classList.remove('hidden');
+      rareStageEl.classList.add('hidden');
+      
+      const animal = normalAnimals[getRandomInt(0, normalAnimals.length - 1)];
+      normalAnimalEl.innerText = animal;
+      
+      const prob = generateMathProblem();
+      questionEl.innerText = `請問 ${prob.expr} = ?`;
+      
+      // Options (1 correct, 3 wrong)
+      let choices = [prob.ans];
+      while(choices.length < 4) {
+        let wrong = prob.ans + getRandomInt(-10, 10);
+        if (wrong > 0 && !choices.includes(wrong)) choices.push(wrong);
+      }
+      choices.sort(() => Math.random() - 0.5);
+
+      optionsEl.className = "options-grid grid-2";
+      choices.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'btn-opt';
+        btn.innerText = opt;
+        btn.onclick = () => checkNormalAnswer(opt, prob.ans);
+        optionsEl.appendChild(btn);
+      });
+
+    } else {
+      // Boss Rare Stage
+      setupRareStage();
+    }
+  }
+
+  function checkNormalAnswer(selected, correct) {
+    if (selected === correct) {
+      totalRescued++;
+      normalRescuedCount++;
+      currentStageStep++;
+      nextQuestion();
+    } else {
+      alert("答錯囉！再算一次看看！");
+    }
+  }
+
+  function setupRareStage() {
+    isRareStage = true;
+    updateHeader();
+    normalStageEl.classList.add('hidden');
+    rareStageEl.classList.remove('hidden');
+
+    const rareAnimal = rareAnimals[getRandomInt(0, rareAnimals.length - 1)];
+    rareAnimalEl.innerText = rareAnimal;
+
+    // Generate 3 unique target numbers
+    rareTargets = [];
+    while(rareTargets.length < 3) {
+      let t = getRandomInt(15, 70);
+      if(!rareTargets.includes(t)) rareTargets.push(t);
+    }
+    rareCleared = [false, false, false];
+
+    renderRareTargets();
+
+    // Generate 5 Equations (3 match targets, 2 are distractors)
+    let questions = [];
+    rareTargets.forEach(target => {
+      questions.push(generateMathProblem(target));
+    });
+    // Add 2 wrong distractors
+    while(questions.length < 5) {
+      let dummy = generateMathProblem();
+      if(!rareTargets.includes(dummy.ans)) {
+        questions.push(dummy);
+      }
+    }
+    questions.sort(() => Math.random() - 0.5);
+    currentQuestions = questions;
+
+    questionEl.innerText = "找出對應上面密碼鎖的算式！";
+    optionsEl.className = "options-grid grid-1";
+
+    renderRareOptions();
+  }
+
+  function renderRareTargets() {
+    targetNumbersEl.innerHTML = '';
+    rareTargets.forEach((num, idx) => {
+      const tag = document.createElement('div');
+      tag.className = `num-tag ${rareCleared[idx] ? 'cleared' : ''}`;
+      tag.innerText = `鎖 ${idx+1}: ${num}`;
+      targetNumbersEl.appendChild(tag);
+    });
+  }
+
+  function renderRareOptions() {
+    optionsEl.innerHTML = '';
+    currentQuestions.forEach((q, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'btn-opt';
+      btn.innerText = `${q.expr} = ?`;
+      if(q.solved) btn.disabled = true;
+      
+      btn.onclick = () => checkRareAnswer(q, idx);
+      optionsEl.appendChild(btn);
+    });
+  }
+
+  function checkRareAnswer(q, qIdx) {
+    const targetIdx = rareTargets.indexOf(q.ans);
+    
+    if (targetIdx !== -1 && !rareCleared[targetIdx]) {
+      // Correct Match!
+      rareCleared[targetIdx] = true;
+      currentQuestions[qIdx].solved = true;
+      renderRareTargets();
+      renderRareOptions();
+
+      // Check if all 3 cleared
+      if (rareCleared.every(c => c === true)) {
+        setTimeout(() => {
+          alert(`🎉 成功破解巨大泡泡！拯救了稀有動物 【${rareAnimalEl.innerText}】！`);
+          totalRescued++;
+          rareRescuedList.push(rareAnimalEl.innerText);
+          currentStageStep = 0; // Reset back to normal loop
+          nextQuestion();
+        }, 200);
+      }
+    } else {
+      alert("這個算式的答案沒有出現在密碼鎖上喔！再想想看！");
+    }
+  }
+
+  function endGame() {
+    document.getElementById('cert-normal-count').innerText = normalRescuedCount;
+    document.getElementById('cert-rare-list').innerText = rareRescuedList.length > 0 ? rareRescuedList.join('、') : '無';
+    document.getElementById('cert-total-count').innerText = totalRescued;
+
+    // Evaluate Rank
+    let badgeText = "";
+    if (totalRescued >= 30) {
+      badgeText = "動物救援小英雄 金牌 🥇";
+    } else if (totalRescued >= 20) {
+      badgeText = "動物救援小英雄 銀牌 🥈";
+    } else if (totalRescued >= 10) {
+      badgeText = "動物救援小英雄 銅牌 🥉";
+    } else {
+      badgeText = "動物救援小英雄 實習救援官 🎖️";
+    }
+    
+    document.getElementById('cert-badge-text').innerText = badgeText;
+    certModal.classList.remove('hidden');
+  }
+
+  // Start game on boot
+  startGame();
+</script>
+</body>
+</html>
